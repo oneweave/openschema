@@ -1,0 +1,449 @@
+# yaml-language-server: $schema=../schema/openschema.json
+openschema: 0.1.0-draft
+id: urn:example:openschema:university
+info:
+  title: University
+  version: 1.0.0
+  description: Schema for a university information system covering people,
+    academic programs, courses, enrollments, and grades.
+  contact:
+    name: University Systems Engineering
+    email: engineering@university.example.edu
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  tags:
+    - name: people
+      description: Students, staff, and faculty.
+    - name: academics
+      description: Programs, courses, and curriculum.
+    - name: enrollments
+      description: Course registrations and grades.
+    - name: facilities
+      description: Campuses, buildings, and rooms.
+
+systems:
+  production:
+    type: relational
+    engine: postgresql
+    version: "16"
+
+    description: Primary institutional relational database.
+
+schemas:
+  university:
+    departments:
+      description: Academic and administrative departments.
+      primaryKey:
+        - departmentId
+      required:
+        - departmentId
+        - code
+        - name
+        - facultyId
+      indexes:
+        - fields:
+            - name: code
+          unique: true
+          name: department-code
+        - fields:
+            - name: facultyId
+              order: asc
+          name: department-faculty
+      fields:
+        departmentId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          description: Short uppercase department code, e.g. 'CS', 'ECON'.
+        name:
+          type: string
+        facultyId:
+          type: string
+          format: uuid
+          description: Parent faculty or school this department belongs to.
+        headPersonId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Person currently serving as department head.
+        description:
+          type: string
+          nullable: true
+        establishedYear:
+          type: number
+          format: int32
+          nullable: true
+
+    faculties:
+      description: Top-level academic schools or faculties (e.g. Faculty of Engineering).
+      primaryKey:
+        - facultyId
+      required:
+        - facultyId
+        - name
+      indexes:
+        - fields:
+            - name: name
+              order: asc
+          name: faculty-name
+      fields:
+        facultyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        deanPersonId:
+          type: string
+          format: uuid
+          nullable: true
+
+    persons:
+      description: All individuals known to the university (students, staff, faculty).
+      primaryKey:
+        - personId
+      required:
+        - personId
+        - email
+        - firstName
+        - lastName
+        - role
+      indexes:
+        - fields:
+            - name: email
+          unique: true
+          name: person-email
+        - fields:
+            - name: role
+              order: asc
+          name: person-role
+        - fields:
+            - name: lastName
+              order: asc
+            - name: firstName
+              order: asc
+          name: person-name
+      fields:
+        personId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum:
+            - student
+            - faculty
+            - staff
+            - alumni
+        dateOfBirth:
+          type: date
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        address:
+          type: object
+          nullable: true
+          fields:
+            line1:
+              type: string
+            line2:
+              type: string
+              nullable: true
+            city:
+              type: string
+            postalCode:
+              type: string
+            country:
+              type: string
+        enrollmentDate:
+          type: date
+          nullable: true
+          description: Date of first enrollment (students and faculty).
+        departmentId:
+          type: string
+          format: uuid
+          nullable: true
+
+    programs:
+      description: Degree and certificate programs offered by the university.
+      primaryKey:
+        - programId
+      required:
+        - programId
+        - code
+        - title
+        - level
+        - departmentId
+        - creditHoursRequired
+      indexes:
+        - fields:
+            - name: code
+          unique: true
+          name: program-code
+        - fields:
+            - name: departmentId
+              order: asc
+          name: program-department
+        - fields:
+            - name: level
+              order: asc
+          name: program-level
+      fields:
+        programId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          description: Unique program code, e.g. 'BSC-CS', 'MSC-DATA'.
+        title:
+          type: string
+        level:
+          type: string
+          enum:
+            - certificate
+            - associate
+            - bachelor
+            - master
+            - doctoral
+        departmentId:
+          type: string
+          format: uuid
+        creditHoursRequired:
+          type: number
+          format: int32
+        durationYears:
+          type: number
+          format: float
+          nullable: true
+        description:
+          type: string
+          nullable: true
+
+    courses:
+      description: Individual course units offered each term.
+      primaryKey:
+        - courseId
+      required:
+        - courseId
+        - code
+        - title
+        - creditHours
+        - departmentId
+      indexes:
+        - fields:
+            - name: code
+          unique: true
+          name: course-code
+        - fields:
+            - name: departmentId
+              order: asc
+          name: course-department
+      fields:
+        courseId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          description: Course code, e.g. 'CS-401'.
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        creditHours:
+          type: number
+          format: int32
+        departmentId:
+          type: string
+          format: uuid
+        level:
+          type: string
+          enum:
+            - undergraduate
+            - graduate
+          default: undergraduate
+        prerequisites:
+          type: array
+          description: Course IDs that must be completed before enrollment.
+          items:
+            type: string
+            format: uuid
+
+    sections:
+      description: A specific offering of a course in a given term with an assigned
+        instructor and room.
+      primaryKey:
+        - sectionId
+      required:
+        - sectionId
+        - courseId
+        - term
+        - instructorId
+        - capacityMax
+      indexes:
+        - fields:
+            - name: courseId
+              order: asc
+            - name: term
+              order: desc
+          name: section-course-term
+        - fields:
+            - name: instructorId
+              order: asc
+            - name: term
+              order: desc
+          name: section-instructor-term
+      fields:
+        sectionId:
+          type: string
+          format: uuid
+        courseId:
+          type: string
+          format: uuid
+        term:
+          type: string
+          description: Academic term identifier, e.g. '2026-FALL'.
+        instructorId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+          nullable: true
+        capacityMax:
+          type: number
+          format: int32
+        enrolledCount:
+          type: number
+          format: int32
+          default: 0
+        schedule:
+          type: object
+          nullable: true
+          fields:
+            days:
+              type: array
+              items:
+                type: string
+                enum:
+                  - MON
+                  - TUE
+                  - WED
+                  - THU
+                  - FRI
+                  - SAT
+                  - SUN
+            startTime:
+              type: string
+              description: ISO 8601 local time, e.g. '09:00'.
+            endTime:
+              type: string
+
+    enrollments:
+      description: A student's registration in a course section.
+      primaryKey:
+        - enrollmentId
+      required:
+        - enrollmentId
+        - studentId
+        - sectionId
+        - enrolledAt
+        - status
+      indexes:
+        - fields:
+            - name: studentId
+              order: asc
+            - name: sectionId
+              order: asc
+          unique: true
+          name: enrollment-student-section
+        - fields:
+            - name: sectionId
+              order: asc
+          name: enrollment-section
+        - fields:
+            - name: status
+              order: asc
+          name: enrollment-status
+      fields:
+        enrollmentId:
+          type: string
+          format: uuid
+        studentId:
+          type: string
+          format: uuid
+        sectionId:
+          type: string
+          format: uuid
+        enrolledAt:
+          type: datetime
+        status:
+          type: string
+          enum:
+            - registered
+            - waitlisted
+            - dropped
+            - completed
+        gradeValue:
+          type: string
+          nullable: true
+          description: Final letter grade, e.g. 'A', 'B+', 'F'. Null until graded.
+        gradePoints:
+          type: number
+          format: decimal
+          nullable: true
+          description: Numeric grade points used for GPA calculation.
+        gradedAt:
+          type: datetime
+          nullable: true
+
+    rooms:
+      description: Physical teaching and event spaces.
+      primaryKey:
+        - roomId
+      required:
+        - roomId
+        - buildingCode
+        - roomNumber
+        - capacity
+      indexes:
+        - fields:
+            - name: buildingCode
+              order: asc
+            - name: roomNumber
+              order: asc
+          unique: true
+          name: room-location
+      fields:
+        roomId:
+          type: string
+          format: uuid
+        buildingCode:
+          type: string
+        roomNumber:
+          type: string
+        capacity:
+          type: number
+          format: int32
+        roomType:
+          type: string
+          enum:
+            - lecture-hall
+            - seminar-room
+            - lab
+            - studio
+            - auditorium
+          nullable: true
+        amenities:
+          type: array
+          items:
+            type: string
+          description: Equipment or features such as 'projector', 'whiteboard', 'av-system'.

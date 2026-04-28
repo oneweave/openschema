@@ -1,0 +1,426 @@
+# yaml-language-server: $schema=../schema/openschema.json
+openschema: 0.1.0-draft
+id: urn:example:openschema:music-streaming
+info:
+  title: Music Streaming Service
+  version: 1.0.0
+  description: Schema for a cloud-based music streaming platform with users,
+    subscriptions, playlists, and play history.
+  contact:
+    name: Streaming Platform Engineering
+    email: engineering@streaming.example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  tags:
+    - name: catalog
+      description: Music catalog (artists, albums, tracks).
+    - name: users
+      description: User accounts, subscriptions, and preferences.
+    - name: activity
+      description: Playback history and engagement data.
+
+systems:
+  catalog-store:
+    type: document
+    engine: mongodb
+    version: "8.0"
+
+    description: Document store for catalog and user data.
+  activity-store:
+    type: key-value
+    engine: redis
+    version: "7.4"
+
+    description: Low-latency store for play counts and session state.
+
+schemas:
+  music-streaming:
+    artists:
+      description: Recording artists and bands.
+      primaryKey:
+        - artistId
+      required:
+        - artistId
+        - name
+      indexes:
+        - fields:
+            - name: name
+              order: asc
+          name: artist-name
+        - fields:
+            - name: genres
+          name: artist-genres
+      fields:
+        artistId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        genres:
+          type: array
+          items:
+            type: string
+        country:
+          type: string
+        bio:
+          type: string
+          nullable: true
+        verified:
+          type: boolean
+          default: false
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        monthlyListeners:
+          type: number
+          format: int64
+          default: 0
+
+    albums:
+      description: Music albums in the catalog.
+      primaryKey:
+        - albumId
+      required:
+        - albumId
+        - artistId
+        - title
+        - releaseDate
+        - albumType
+      indexes:
+        - fields:
+            - name: artistId
+              order: asc
+          name: album-artist
+        - fields:
+            - name: releaseDate
+              order: desc
+          name: album-release-date
+      fields:
+        albumId:
+          type: string
+          format: uuid
+        artistId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        releaseDate:
+          type: date
+        albumType:
+          type: string
+          enum:
+            - album
+            - single
+            - ep
+            - compilation
+        genres:
+          type: array
+          items:
+            type: string
+        coverUrl:
+          type: string
+          format: uri
+          nullable: true
+        totalTracks:
+          type: number
+          format: int32
+        durationMs:
+          type: number
+          format: int64
+        explicit:
+          type: boolean
+          default: false
+
+    tracks:
+      description: Streamable audio tracks.
+      primaryKey:
+        - trackId
+      required:
+        - trackId
+        - albumId
+        - artistId
+        - title
+        - durationMs
+        - audioUrl
+      indexes:
+        - fields:
+            - name: albumId
+              order: asc
+            - name: trackNumber
+              order: asc
+          name: track-album-position
+        - fields:
+            - name: isrc
+          unique: true
+          name: track-isrc
+      fields:
+        trackId:
+          type: string
+          format: uuid
+        albumId:
+          type: string
+          format: uuid
+        artistId:
+          type: string
+          format: uuid
+        featureArtistIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        title:
+          type: string
+        trackNumber:
+          type: number
+          format: int32
+        durationMs:
+          type: number
+          format: int64
+        audioUrl:
+          type: string
+          format: uri
+        explicit:
+          type: boolean
+          default: false
+        isrc:
+          type: string
+          nullable: true
+        playCount:
+          type: number
+          format: int64
+          default: 0
+
+    users:
+      description: Registered streaming service accounts.
+      primaryKey:
+        - userId
+      required:
+        - userId
+        - email
+        - createdAt
+      indexes:
+        - fields:
+            - name: email
+          unique: true
+          name: user-email
+      fields:
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        country:
+          type: string
+        birthDate:
+          type: date
+          nullable: true
+        createdAt:
+          type: datetime
+        preferences:
+          type: object
+          fields:
+            explicitContent:
+              type: boolean
+              default: true
+            audioQuality:
+              type: string
+              enum:
+                - low
+                - normal
+                - high
+                - lossless
+              default: normal
+            normalizeVolume:
+              type: boolean
+              default: true
+
+    subscriptions:
+      description: User subscription plan records.
+      primaryKey:
+        - subscriptionId
+      required:
+        - subscriptionId
+        - userId
+        - plan
+        - status
+        - startDate
+      indexes:
+        - fields:
+            - name: userId
+              order: asc
+          name: subscription-user
+        - fields:
+            - name: status
+              order: asc
+            - name: renewalDate
+              order: asc
+          name: subscription-renewal
+      fields:
+        subscriptionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        plan:
+          type: string
+          enum:
+            - free
+            - individual
+            - duo
+            - family
+            - student
+        status:
+          type: string
+          enum:
+            - active
+            - paused
+            - cancelled
+            - expired
+        startDate:
+          type: date
+        renewalDate:
+          type: date
+          nullable: true
+        cancelledAt:
+          type: datetime
+          nullable: true
+        pricePerCycleCents:
+          type: number
+          format: int32
+          nullable: true
+        billingCycle:
+          type: string
+          enum:
+            - monthly
+            - annual
+          nullable: true
+
+    playlists:
+      description: User-created or editorial playlists.
+      primaryKey:
+        - playlistId
+      required:
+        - playlistId
+        - ownerId
+        - name
+        - createdAt
+      indexes:
+        - fields:
+            - name: ownerId
+              order: asc
+          name: playlist-owner
+        - fields:
+            - name: public
+              order: asc
+            - name: followersCount
+              order: desc
+          name: playlist-discovery
+      fields:
+        playlistId:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        coverUrl:
+          type: string
+          format: uri
+          nullable: true
+        public:
+          type: boolean
+          default: false
+        collaborative:
+          type: boolean
+          default: false
+        followersCount:
+          type: number
+          format: int64
+          default: 0
+        createdAt:
+          type: datetime
+        updatedAt:
+          type: datetime
+          nullable: true
+        tracks:
+          type: array
+          items:
+            type: object
+            fields:
+              trackId:
+                type: string
+                format: uuid
+              addedAt:
+                type: datetime
+              addedByUserId:
+                type: string
+                format: uuid
+
+    playHistory:
+      description: Individual track play events per user.
+      primaryKey:
+        - eventId
+      required:
+        - eventId
+        - userId
+        - trackId
+        - playedAt
+      indexes:
+        - fields:
+            - name: userId
+              order: asc
+            - name: playedAt
+              order: desc
+          name: history-user-time
+        - fields:
+            - name: trackId
+              order: asc
+            - name: playedAt
+              order: desc
+          name: history-track-time
+      fields:
+        eventId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        trackId:
+          type: string
+          format: uuid
+        playedAt:
+          type: datetime
+        durationPlayedMs:
+          type: number
+          format: int64
+          description: Milliseconds of the track actually played before skip or completion.
+        completed:
+          type: boolean
+          default: false
+        deviceType:
+          type: string
+          enum:
+            - mobile
+            - desktop
+            - web
+            - tv
+            - other
+          nullable: true
+        offlinePlay:
+          type: boolean
+          default: false

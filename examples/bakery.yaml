@@ -1,0 +1,461 @@
+# yaml-language-server: $schema=../schema/openschema.json
+openschema: 0.1.0-draft
+id: urn:example:openschema:bakery
+info:
+  title: Bakery
+  version: 1.0.0
+  description: Schema for a bakery managing products, ingredients, recipes,
+    orders, and production scheduling.
+  contact:
+    name: Bakery Systems
+    email: engineering@bakery.example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  tags:
+    - name: products
+      description: Bakery product catalog and recipes.
+    - name: inventory
+      description: Ingredients and stock management.
+    - name: orders
+      description: Customer orders and fulfillment.
+    - name: production
+      description: Daily production planning and scheduling.
+
+systems:
+  production:
+    type: relational
+    engine: postgresql
+    version: "16"
+
+    description: Primary bakery management database.
+
+schemas:
+  bakery:
+    categories:
+      description: Top-level groupings for bakery products (e.g. Breads, Pastries, Cakes).
+      primaryKey:
+        - categoryId
+      required:
+        - categoryId
+        - name
+      indexes:
+        - fields:
+            - name: name
+          unique: true
+          name: category-name
+      fields:
+        categoryId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        displayOrder:
+          type: number
+          format: int32
+          default: 0
+
+    products:
+      description: Bakery items available for sale.
+      primaryKey:
+        - productId
+      required:
+        - productId
+        - sku
+        - name
+        - categoryId
+        - unitPriceCents
+        - active
+      indexes:
+        - fields:
+            - name: sku
+          unique: true
+          name: product-sku
+        - fields:
+            - name: categoryId
+              order: asc
+            - name: name
+              order: asc
+          name: product-category-name
+        - fields:
+            - name: active
+              order: asc
+          name: product-active
+      fields:
+        productId:
+          type: string
+          format: uuid
+        sku:
+          type: string
+          description: Unique stock keeping unit code.
+        name:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        description:
+          type: string
+          nullable: true
+        unitPriceCents:
+          type: number
+          format: int32
+        weightGrams:
+          type: number
+          format: decimal
+          nullable: true
+        servings:
+          type: number
+          format: int32
+          nullable: true
+        allergens:
+          type: array
+          items:
+            type: string
+          description: Known allergens, e.g. 'gluten', 'nuts', 'dairy', 'eggs'.
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        active:
+          type: boolean
+          default: true
+        seasonalFrom:
+          type: string
+          nullable: true
+          description: Month-day the product becomes available, e.g. '11-01'.
+        seasonalUntil:
+          type: string
+          nullable: true
+          description: Month-day the product is last available, e.g. '01-06'.
+
+    ingredients:
+      description: Raw materials and supplies used in production.
+      primaryKey:
+        - ingredientId
+      required:
+        - ingredientId
+        - name
+        - unit
+      indexes:
+        - fields:
+            - name: name
+          unique: true
+          name: ingredient-name
+      fields:
+        ingredientId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        unit:
+          type: string
+          description: Unit of measurement, e.g. 'kg', 'g', 'L', 'ml', 'each'.
+        stockQuantity:
+          type: number
+          format: decimal
+          default: 0
+        reorderThreshold:
+          type: number
+          format: decimal
+          nullable: true
+          description: Stock level below which a reorder should be triggered.
+        costPerUnitCents:
+          type: number
+          format: int32
+          nullable: true
+        supplier:
+          type: string
+          nullable: true
+        allergen:
+          type: boolean
+          default: false
+
+    recipes:
+      description: Production recipes that define how a product is made from ingredients.
+      primaryKey:
+        - recipeId
+      required:
+        - recipeId
+        - productId
+        - version
+        - yieldQuantity
+        - yieldUnit
+      indexes:
+        - fields:
+            - name: productId
+              order: asc
+            - name: version
+              order: desc
+          unique: true
+          name: recipe-product-version
+      fields:
+        recipeId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        version:
+          type: number
+          format: int32
+          description: Recipe version number. Higher is more recent.
+        yieldQuantity:
+          type: number
+          format: decimal
+          description: Number of units this recipe batch produces.
+        yieldUnit:
+          type: string
+          description: Unit for yield, e.g. 'loaf', 'piece', 'kg', 'tray'.
+        prepTimeMinutes:
+          type: number
+          format: int32
+          nullable: true
+        bakeTimeMinutes:
+          type: number
+          format: int32
+          nullable: true
+        ovenTemperatureCelsius:
+          type: number
+          format: int32
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        ingredientLines:
+          type: array
+          items:
+            type: object
+            fields:
+              ingredientId:
+                type: string
+                format: uuid
+              quantity:
+                type: number
+                format: decimal
+              unit:
+                type: string
+              notes:
+                type: string
+                nullable: true
+
+    customers:
+      description: Retail and wholesale customers.
+      primaryKey:
+        - customerId
+      required:
+        - customerId
+        - name
+        - email
+      indexes:
+        - fields:
+            - name: email
+          unique: true
+          name: customer-email
+        - fields:
+            - name: customerType
+              order: asc
+          name: customer-type
+      fields:
+        customerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        customerType:
+          type: string
+          enum:
+            - retail
+            - wholesale
+            - catering
+          default: retail
+        address:
+          type: object
+          nullable: true
+          fields:
+            line1:
+              type: string
+            line2:
+              type: string
+              nullable: true
+            city:
+              type: string
+            postalCode:
+              type: string
+            country:
+              type: string
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: datetime
+
+    orders:
+      description: Customer orders for bakery products.
+      primaryKey:
+        - orderId
+      required:
+        - orderId
+        - customerId
+        - status
+        - requiredByDate
+        - createdAt
+      indexes:
+        - fields:
+            - name: customerId
+              order: asc
+          name: order-customer
+        - fields:
+            - name: status
+              order: asc
+            - name: requiredByDate
+              order: asc
+          name: order-status-date
+        - fields:
+            - name: createdAt
+              order: desc
+          name: order-created-at
+      fields:
+        orderId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - draft
+            - confirmed
+            - in-production
+            - ready
+            - collected
+            - delivered
+            - cancelled
+        requiredByDate:
+          type: date
+          description: Date the customer needs the order fulfilled.
+        createdAt:
+          type: datetime
+        updatedAt:
+          type: datetime
+          nullable: true
+        deliveryMethod:
+          type: string
+          enum:
+            - collection
+            - delivery
+          default: collection
+        deliveryAddress:
+          type: object
+          nullable: true
+          fields:
+            line1:
+              type: string
+            city:
+              type: string
+            postalCode:
+              type: string
+            country:
+              type: string
+        lines:
+          type: array
+          items:
+            type: object
+            fields:
+              productId:
+                type: string
+                format: uuid
+              quantity:
+                type: number
+                format: int32
+              unitPriceCents:
+                type: number
+                format: int32
+              customisation:
+                type: string
+                nullable: true
+                description: Free-text decoration or customisation notes.
+        totalCents:
+          type: number
+          format: int32
+        depositPaidCents:
+          type: number
+          format: int32
+          default: 0
+        notes:
+          type: string
+          nullable: true
+
+    productionRuns:
+      description: Scheduled and completed production batch records.
+      primaryKey:
+        - runId
+      required:
+        - runId
+        - productId
+        - recipeId
+        - scheduledDate
+        - plannedQuantity
+        - status
+      indexes:
+        - fields:
+            - name: scheduledDate
+              order: asc
+            - name: status
+              order: asc
+          name: run-schedule
+        - fields:
+            - name: productId
+              order: asc
+            - name: scheduledDate
+              order: desc
+          name: run-product-date
+      fields:
+        runId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        recipeId:
+          type: string
+          format: uuid
+        scheduledDate:
+          type: date
+        startedAt:
+          type: datetime
+          nullable: true
+        completedAt:
+          type: datetime
+          nullable: true
+        status:
+          type: string
+          enum:
+            - scheduled
+            - in-progress
+            - completed
+            - cancelled
+        plannedQuantity:
+          type: number
+          format: decimal
+        actualQuantity:
+          type: number
+          format: decimal
+          nullable: true
+          description: Actual yield after production.
+        batchNotes:
+          type: string
+          nullable: true
+        assignedStaffId:
+          type: string
+          format: uuid
+          nullable: true

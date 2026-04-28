@@ -1,0 +1,499 @@
+# yaml-language-server: $schema=../schema/openschema.json
+openschema: 0.1.0-draft
+id: urn:example:openschema:car-dealer
+info:
+  title: Car Dealer
+  version: 1.0.0
+  description: Schema for an automotive dealership managing vehicle inventory,
+    customers, sales, financing, and service appointments.
+  contact:
+    name: Dealer Management Systems
+    email: engineering@dealership.example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  tags:
+    - name: inventory
+      description: Vehicle stock and specifications.
+    - name: sales
+      description: Sales transactions and financing.
+    - name: customers
+      description: Customer accounts and contact records.
+    - name: service
+      description: Vehicle service and maintenance appointments.
+
+systems:
+  production:
+    type: relational
+    engine: postgresql
+    version: "16"
+
+    description: Primary dealership management database.
+
+schemas:
+  car-dealer:
+    makes:
+      description: Vehicle manufacturers (e.g. Toyota, Ford).
+      primaryKey:
+        - makeId
+      required:
+        - makeId
+        - name
+      indexes:
+        - fields:
+            - name: name
+          unique: true
+          name: make-name
+      fields:
+        makeId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        countryOfOrigin:
+          type: string
+          nullable: true
+
+    models:
+      description: Vehicle model lines belonging to a make (e.g. Corolla, Mustang).
+      primaryKey:
+        - modelId
+      required:
+        - modelId
+        - makeId
+        - name
+      indexes:
+        - fields:
+            - name: makeId
+              order: asc
+            - name: name
+              order: asc
+          name: model-make-name
+      fields:
+        modelId:
+          type: string
+          format: uuid
+        makeId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        bodyStyle:
+          type: string
+          enum:
+            - sedan
+            - hatchback
+            - suv
+            - truck
+            - coupe
+            - convertible
+            - van
+            - wagon
+            - minivan
+          nullable: true
+
+    vehicles:
+      description: Individual vehicle units in dealership inventory.
+      primaryKey:
+        - vehicleId
+      required:
+        - vehicleId
+        - vin
+        - makeId
+        - modelId
+        - year
+        - condition
+        - status
+        - listPriceCents
+      indexes:
+        - fields:
+            - name: vin
+          unique: true
+          name: vehicle-vin
+        - fields:
+            - name: status
+              order: asc
+          name: vehicle-status
+        - fields:
+            - name: makeId
+              order: asc
+            - name: modelId
+              order: asc
+            - name: year
+              order: desc
+          name: vehicle-make-model-year
+        - fields:
+            - name: listPriceCents
+              order: asc
+          name: vehicle-price
+      fields:
+        vehicleId:
+          type: string
+          format: uuid
+        vin:
+          type: string
+          description: 17-character Vehicle Identification Number.
+        makeId:
+          type: string
+          format: uuid
+        modelId:
+          type: string
+          format: uuid
+        trim:
+          type: string
+          nullable: true
+          description: Trim level, e.g. 'XLE', 'Sport', 'Limited'.
+        year:
+          type: number
+          format: int32
+        condition:
+          type: string
+          enum:
+            - new
+            - used
+            - certified-pre-owned
+        status:
+          type: string
+          enum:
+            - available
+            - reserved
+            - sold
+            - in-transit
+            - in-service
+        mileage:
+          type: number
+          format: int32
+          nullable: true
+          description: Odometer reading in miles. Null for new vehicles.
+        exteriorColor:
+          type: string
+          nullable: true
+        interiorColor:
+          type: string
+          nullable: true
+        engineDescription:
+          type: string
+          nullable: true
+        transmission:
+          type: string
+          enum:
+            - automatic
+            - manual
+            - cvt
+            - other
+          nullable: true
+        drivetrain:
+          type: string
+          enum:
+            - fwd
+            - rwd
+            - awd
+            - 4wd
+          nullable: true
+        fuelType:
+          type: string
+          enum:
+            - gasoline
+            - diesel
+            - hybrid
+            - plug-in-hybrid
+            - electric
+            - hydrogen
+          nullable: true
+        listPriceCents:
+          type: number
+          format: int64
+        msrpCents:
+          type: number
+          format: int64
+          nullable: true
+        features:
+          type: array
+          items:
+            type: string
+          description: Optional feature list, e.g. 'sunroof', 'heated-seats', 'navigation'.
+        receivedAt:
+          type: date
+          nullable: true
+        photoUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+
+    customers:
+      description: Dealership customer accounts.
+      primaryKey:
+        - customerId
+      required:
+        - customerId
+        - email
+        - firstName
+        - lastName
+      indexes:
+        - fields:
+            - name: email
+          unique: true
+          name: customer-email
+        - fields:
+            - name: lastName
+              order: asc
+            - name: firstName
+              order: asc
+          name: customer-name
+      fields:
+        customerId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        dateOfBirth:
+          type: date
+          nullable: true
+        driversLicenseNumber:
+          type: string
+          nullable: true
+        address:
+          type: object
+          nullable: true
+          fields:
+            line1:
+              type: string
+            line2:
+              type: string
+              nullable: true
+            city:
+              type: string
+            state:
+              type: string
+            postalCode:
+              type: string
+            country:
+              type: string
+        createdAt:
+          type: datetime
+        preferredContactMethod:
+          type: string
+          enum:
+            - email
+            - phone
+            - sms
+          default: email
+
+    salespeople:
+      description: Dealership sales staff members.
+      primaryKey:
+        - salespersonId
+      required:
+        - salespersonId
+        - employeeNumber
+        - firstName
+        - lastName
+        - email
+      indexes:
+        - fields:
+            - name: employeeNumber
+          unique: true
+          name: salesperson-employee-number
+        - fields:
+            - name: email
+          unique: true
+          name: salesperson-email
+      fields:
+        salespersonId:
+          type: string
+          format: uuid
+        employeeNumber:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        hiredAt:
+          type: date
+          nullable: true
+        active:
+          type: boolean
+          default: true
+
+    sales:
+      description: Completed vehicle sales transactions.
+      primaryKey:
+        - saleId
+      required:
+        - saleId
+        - vehicleId
+        - customerId
+        - salespersonId
+        - saleDate
+        - salePriceCents
+        - status
+      indexes:
+        - fields:
+            - name: vehicleId
+          unique: true
+          name: sale-vehicle
+          description: Each vehicle may only be sold once.
+        - fields:
+            - name: customerId
+              order: asc
+          name: sale-customer
+        - fields:
+            - name: salespersonId
+              order: asc
+            - name: saleDate
+              order: desc
+          name: sale-salesperson-date
+        - fields:
+            - name: saleDate
+              order: desc
+          name: sale-date
+      fields:
+        saleId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        salespersonId:
+          type: string
+          format: uuid
+        saleDate:
+          type: date
+        salePriceCents:
+          type: number
+          format: int64
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - cancelled
+        tradeInVehicleId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Vehicle ID of customer trade-in, if any.
+        tradeInAllowanceCents:
+          type: number
+          format: int64
+          nullable: true
+        financing:
+          type: object
+          nullable: true
+          fields:
+            lender:
+              type: string
+            termMonths:
+              type: number
+              format: int32
+            aprPercent:
+              type: number
+              format: decimal
+            monthlyPaymentCents:
+              type: number
+              format: int64
+            downPaymentCents:
+              type: number
+              format: int64
+        notes:
+          type: string
+          nullable: true
+
+    serviceAppointments:
+      description: Vehicle maintenance and repair appointments.
+      primaryKey:
+        - appointmentId
+      required:
+        - appointmentId
+        - customerId
+        - vin
+        - scheduledAt
+        - status
+      indexes:
+        - fields:
+            - name: customerId
+              order: asc
+          name: appointment-customer
+        - fields:
+            - name: vin
+              order: asc
+            - name: scheduledAt
+              order: desc
+          name: appointment-vehicle-date
+        - fields:
+            - name: scheduledAt
+              order: asc
+            - name: status
+              order: asc
+          name: appointment-schedule
+      fields:
+        appointmentId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        vin:
+          type: string
+          description: VIN of the vehicle being serviced (may be a non-inventory vehicle).
+        scheduledAt:
+          type: datetime
+        completedAt:
+          type: datetime
+          nullable: true
+        status:
+          type: string
+          enum:
+            - scheduled
+            - in-progress
+            - completed
+            - cancelled
+            - no-show
+        advisorId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Service advisor assigned to this appointment.
+        serviceLines:
+          type: array
+          items:
+            type: object
+            fields:
+              serviceCode:
+                type: string
+              description:
+                type: string
+              laborCents:
+                type: number
+                format: int64
+              partsCents:
+                type: number
+                format: int64
+        totalCents:
+          type: number
+          format: int64
+          nullable: true
+        customerNotes:
+          type: string
+          nullable: true
+        technicianNotes:
+          type: string
+          nullable: true

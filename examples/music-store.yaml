@@ -1,0 +1,249 @@
+# yaml-language-server: $schema=../schema/openschema.json
+openschema: 0.1.0-draft
+id: urn:example:openschema:music-store
+info:
+  title: Music Store
+  version: 1.0.0
+  description: Schema for a physical and online music store selling albums,
+    tracks, and merchandise.
+  contact:
+    name: Music Store Engineering
+    email: engineering@musicstore.example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  tags:
+    - name: catalog
+      description: Product and recording catalog.
+    - name: sales
+      description: Orders and customer transactions.
+    - name: inventory
+      description: Stock and warehouse management.
+
+systems:
+  production:
+    type: relational
+    engine: postgresql
+    version: "16"
+    description: Primary production relational database.
+
+schemas:
+  music-store:
+    artists:
+      description: Musicians, bands, and other recording artists.
+      primaryKey:
+        - artistId
+      required:
+        - artistId
+        - name
+      indexes:
+        - fields:
+            - name: name
+              order: asc
+          name: artist-name
+      fields:
+        artistId:
+          type: string
+          format: uuid
+          description: Unique artist identifier.
+        name:
+          type: string
+          description: Stage name or band name.
+        country:
+          type: string
+          description: Country of origin (ISO 3166-1 alpha-2).
+        formedYear:
+          type: number
+          format: int32
+          description: Year the artist or band was formed.
+        biography:
+          type: string
+          description: Short biography.
+        tags:
+          type: array
+          description: Genre tags.
+          items:
+            type: string
+
+    albums:
+      description: Music albums available for sale.
+      primaryKey:
+        - albumId
+      required:
+        - albumId
+        - artistId
+        - title
+        - releaseYear
+      indexes:
+        - fields:
+            - name: artistId
+              order: asc
+          name: album-artist
+        - fields:
+            - name: releaseYear
+              order: desc
+          name: album-release-year
+      fields:
+        albumId:
+          type: string
+          format: uuid
+        artistId:
+          type: string
+          format: uuid
+          description: Foreign key to artists.
+        title:
+          type: string
+        releaseYear:
+          type: number
+          format: int32
+        genre:
+          type: string
+        labelName:
+          type: string
+        coverImageUrl:
+          type: string
+          format: uri
+        priceCents:
+          type: number
+          format: int32
+          description: Retail price in cents.
+        stockQuantity:
+          type: number
+          format: int32
+
+    tracks:
+      description: Individual tracks belonging to an album.
+      primaryKey:
+        - trackId
+      required:
+        - trackId
+        - albumId
+        - trackNumber
+        - title
+        - durationSeconds
+      indexes:
+        - fields:
+            - name: albumId
+              order: asc
+            - name: trackNumber
+              order: asc
+          name: track-album-position
+      fields:
+        trackId:
+          type: string
+          format: uuid
+        albumId:
+          type: string
+          format: uuid
+        trackNumber:
+          type: number
+          format: int32
+        title:
+          type: string
+        durationSeconds:
+          type: number
+          format: int32
+        isrc:
+          type: string
+          description: International Standard Recording Code.
+
+    customers:
+      description: Registered store customers.
+      primaryKey:
+        - customerId
+      required:
+        - customerId
+        - email
+      indexes:
+        - fields:
+            - name: email
+          unique: true
+          name: customer-email-unique
+      fields:
+        customerId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        address:
+          type: object
+          fields:
+            line1:
+              type: string
+            line2:
+              type: string
+              nullable: true
+            city:
+              type: string
+            postalCode:
+              type: string
+            country:
+              type: string
+
+    orders:
+      description: Customer purchase orders.
+      primaryKey:
+        - orderId
+      required:
+        - orderId
+        - customerId
+        - status
+        - createdAt
+      indexes:
+        - fields:
+            - name: customerId
+              order: asc
+          name: order-customer
+        - fields:
+            - name: createdAt
+              order: desc
+          name: order-created-at
+        - fields:
+            - name: status
+              order: asc
+          name: order-status
+      fields:
+        orderId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - shipped
+            - delivered
+            - cancelled
+        createdAt:
+          type: datetime
+        updatedAt:
+          type: datetime
+          nullable: true
+        totalCents:
+          type: number
+          format: int32
+        lines:
+          type: array
+          items:
+            type: object
+            fields:
+              albumId:
+                type: string
+                format: uuid
+              quantity:
+                type: number
+                format: int32
+              unitPriceCents:
+                type: number
+                format: int32
