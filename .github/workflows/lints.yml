@@ -1,0 +1,72 @@
+# Linting workflow
+name: lints
+
+# Validate all examples against the OpenSchema JSON Schema on every push and PR.
+on:
+  push:
+
+    # Read-only access is sufficient.
+permissions:
+  contents: read
+
+jobs:
+  validate-examples:
+    name: Validate examples
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install jsonschema pyyaml
+
+      - name: Validate examples against schema
+        run: |
+          python - <<'EOF'
+          import json
+          import sys
+          import pathlib
+          import yaml
+          import jsonschema
+
+          schema_path = pathlib.Path("spec/openschema.json")
+          examples_dir = pathlib.Path("examples")
+
+          with schema_path.open() as f:
+              schema = json.load(f)
+
+          resolver = jsonschema.validators.RefResolver(
+              base_uri=schema_path.resolve().as_uri(),
+              referrer=schema,
+          )
+
+          validator_cls = jsonschema.validators.validator_for(schema)
+          validator_cls.check_schema(schema)
+          validator = validator_cls(schema, resolver=resolver)
+
+          files = sorted(examples_dir.glob("*.yaml"))
+          if not files:
+              print("No example files found.", file=sys.stderr)
+              sys.exit(1)
+
+          errors = []
+          for path in files:
+              with path.open() as f:
+                  instance = yaml.safe_load(f)
+              errs = list(validator.iter_errors(instance))
+              if errs:
+                  for e in errs:
+                      errors.append(f"{path.name}: {e.json_path}: {e.message}")
+              else:
+                  print(f"OK  {path.name}")
+
+          if errors:
+              print("\nValidation failures:", file=sys.stderr)
+              for msg in errors:
+                  print(f"  FAIL  {msg}", file=sys.stderr)
+              sys.exit(1)
+          EOF
