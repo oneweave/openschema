@@ -1,0 +1,442 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openschema.io/schemas/0.1.0-draft/openschema.json",
+  "title": "OpenSchema Document",
+  "description": "Validates an OpenSchema 0.1.0-draft document.",
+  "type": "object",
+  "required": ["openschema", "info", "schemas"],
+  "properties": {
+    "openschema": {
+      "$ref": "#/$defs/OpenSchemaVersionString"
+    },
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "A URI uniquely identifying this schema document (RFC 3986). A URN is RECOMMENDED."
+    },
+    "info": {
+      "$ref": "#/$defs/InfoObject"
+    },
+    "systems": {
+      "$ref": "#/$defs/SystemsObject"
+    },
+    "schemas": {
+      "$ref": "#/$defs/SchemasObject"
+    },
+    "components": {
+      "$ref": "#/$defs/ComponentsObject"
+    }
+  },
+  "patternProperties": {
+    "^x-": true
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "OpenSchemaVersionString": {
+      "type": "string",
+      "description": "The OpenSchema Specification version this document conforms to. MUST follow Semantic Versioning 2.0.0.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "InfoObject": {
+      "description": "Metadata about the schema document.",
+      "type": "object",
+      "required": ["title", "version"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the schema document."
+        },
+        "version": {
+          "type": "string",
+          "description": "The version of the schema document contents."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description. CommonMark syntax MAY be used."
+        },
+        "termsOfService": {
+          "type": "string",
+          "format": "uri",
+          "description": "An absolute URL to the Terms of Service."
+        },
+        "contact": {
+          "$ref": "#/$defs/ContactObject"
+        },
+        "license": {
+          "$ref": "#/$defs/LicenseObject"
+        },
+        "tags": {
+          "$ref": "#/$defs/TagsObject"
+        },
+        "externalDocs": {
+          "$ref": "#/$defs/ExternalDocumentationObject"
+        }
+      },
+      "patternProperties": {
+        "^x-": true
+      },
+      "additionalProperties": false
+    },
+    "ContactObject": {
+      "description": "Contact information for the schema.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The identifying name of the contact person or organization."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "An absolute URL pointing to the contact information."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the contact person or organization."
+        }
+      },
+      "additionalProperties": false
+    },
+    "LicenseObject": {
+      "description": "License information for the schema.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The license name."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "An absolute URL to the license."
+        }
+      },
+      "additionalProperties": false
+    },
+    "SystemsObject": {
+      "description": "A map of named concrete systems where the schemas MAY be applied.",
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9_\\-]+$": {
+          "oneOf": [
+            { "$ref": "#/$defs/SystemObject" },
+            { "$ref": "#/$defs/ReferenceObject" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "SystemObject": {
+      "description": "A concrete database platform or deployment target.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "A broad storage classification such as 'relational', 'document', or 'key-value'."
+        },
+        "engine": {
+          "type": "string",
+          "description": "The engine or product name."
+        },
+        "version": {
+          "type": "string",
+          "description": "The engine or platform version."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the target system."
+        }
+      },
+      "patternProperties": {
+        "^x-": true
+      },
+      "additionalProperties": false
+    },
+    "SchemasObject": {
+      "description": "A map of named logical schemas. At least one schema MUST be present.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/$defs/SchemaObject" },
+          { "$ref": "#/$defs/ReferenceObject" }
+        ]
+      }
+    },
+    "SchemaObject": {
+      "description": "A named logical schema. Each key is a container name mapping to a Container Object.",
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/$defs/ContainerObject" },
+          { "$ref": "#/$defs/ReferenceObject" }
+        ]
+      }
+    },
+    "ContainersObject": {
+      "description": "A map of named Container Objects used in nested container locations.",
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/$defs/ContainerObject" },
+          { "$ref": "#/$defs/ReferenceObject" }
+        ]
+      }
+    },
+    "ContainerObject": {
+      "description": "A logical container of persisted records (table, collection, bucket, etc.).",
+      "type": "object",
+      "required": ["fields"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "A short summary of the container."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the container."
+        },
+        "primaryKey": {
+          "type": "array",
+          "description": "An ordered list of field names forming the logical primary key. Each entry MUST be unique, MUST be present in every record, and MUST correspond to a field declared in the container's fields.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "indexes": {
+          "type": "array",
+          "description": "Secondary index definitions.",
+          "items": {
+            "$ref": "#/$defs/IndexObject"
+          }
+        },
+        "required": {
+          "type": "array",
+          "description": "A list of required top-level field names.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fields": {
+          "$ref": "#/$defs/FieldsObject"
+        },
+        "containers": {
+          "$ref": "#/$defs/ContainersObject"
+        },
+        "tags": {
+          "$ref": "#/$defs/TagsObject"
+        }
+      },
+      "patternProperties": {
+        "^x-": true
+      },
+      "additionalProperties": false
+    },
+    "IndexObject": {
+      "description": "A secondary index for a container.",
+      "type": "object",
+      "required": ["fields"],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "description": "An ordered list of indexed field descriptors. More than one entry represents a compound index.",
+          "items": {
+            "$ref": "#/$defs/IndexFieldObject"
+          },
+          "minItems": 1
+        },
+        "unique": {
+          "type": "boolean",
+          "description": "Whether the index enforces uniqueness across the indexed field set."
+        },
+        "where": {
+          "type": "string",
+          "description": "An optional predicate or filter expression for partial indexes."
+        },
+        "name": {
+          "type": "string",
+          "description": "An optional implementation-facing index name."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the index."
+        }
+      },
+      "additionalProperties": false
+    },
+    "IndexFieldObject": {
+      "description": "One field position within an index.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The field name included in the index. MUST correspond to a field declared in the enclosing container's fields. A conformant validator MUST fail when this name does not match any declared field."
+        },
+        "order": {
+          "type": "string",
+          "description": "The index ordering. MUST be 'asc' or 'desc' when specified.",
+          "enum": ["asc", "desc"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldsObject": {
+      "description": "A map of named Field Objects.",
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/$defs/FieldObject" },
+          { "$ref": "#/$defs/ReferenceObject" }
+        ]
+      }
+    },
+    "FieldObject": {
+      "description": "A single field definition within a record.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The field type. Primitive examples: 'string', 'number', 'boolean', 'date', 'datetime', 'bytes', 'json'. Structured examples: 'object', 'array'."
+        },
+        "title": {
+          "type": "string",
+          "description": "A human-friendly title for the field."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the field."
+        },
+        "nullable": {
+          "type": "boolean",
+          "description": "Whether the field may explicitly contain a null value. A required field with nullable: true MUST be present but MAY be null."
+        },
+        "default": {
+          "description": "A default value. MUST be type-compatible with the declared 'type'."
+        },
+        "enum": {
+          "type": "array",
+          "description": "An enumeration of allowed values. Each value MUST be type-compatible with the declared 'type'.",
+          "items": true
+        },
+        "format": {
+          "type": "string",
+          "description": "An implementation hint for more specific typing. Examples: 'int32', 'int64', 'float', 'double', 'decimal', 'decimal128', 'uuid', 'email'."
+        },
+        "fields": {
+          "$ref": "#/$defs/FieldsObject",
+          "description": "Child fields. MUST only be present when type is 'object'. When omitted on an object-type field, the embedded object structure is not further constrained (schemaless)."
+        },
+        "items": {
+          "oneOf": [
+            { "$ref": "#/$defs/FieldObject" },
+            { "$ref": "#/$defs/ReferenceObject" }
+          ],
+          "description": "The item definition for repeated values. MUST only be present when type is 'array'. Arrays are homogeneous: a single item type applies to all elements."
+        },
+        "containers": {
+          "$ref": "#/$defs/ContainersObject",
+          "description": "Child containers embedded within this field's value. Valid when the target system supports hierarchical storage."
+        }
+      },
+      "patternProperties": {
+        "^x-": true
+      },
+      "additionalProperties": false
+    },
+    "TagsObject": {
+      "description": "An ordered list of Tag Objects for logical grouping and discovery.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TagObject"
+      }
+    },
+    "TagObject": {
+      "description": "A tag for logical grouping and discovery.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the tag."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description for the tag."
+        }
+      },
+      "additionalProperties": false
+    },
+    "ExternalDocumentationObject": {
+      "description": "A reference to external documentation.",
+      "type": "object",
+      "required": ["url"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "A description of the target documentation."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "An absolute URL for the target documentation."
+        }
+      },
+      "additionalProperties": false
+    },
+    "ComponentsObject": {
+      "description": "Holds reusable definitions that MAY be referenced via $ref from elsewhere in the document.",
+      "type": "object",
+      "properties": {
+        "schemas": {
+          "type": "object",
+          "description": "Reusable schema fragments of the same Schema Object type as root-level schemas values. Intended for reuse via $ref. Distinct from the root-level 'schemas' field, which declares named logical schemas.",
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/$defs/SchemaObject" },
+              { "$ref": "#/$defs/ReferenceObject" }
+            ]
+          }
+        },
+        "fields": {
+          "type": "object",
+          "description": "Reusable field definitions.",
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/$defs/FieldObject" },
+              { "$ref": "#/$defs/ReferenceObject" }
+            ]
+          }
+        },
+        "containers": {
+          "type": "object",
+          "description": "Reusable container definitions.",
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/$defs/ContainerObject" },
+              { "$ref": "#/$defs/ReferenceObject" }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ReferenceObject": {
+      "description": "References another component within the document or in an external document via a URI.",
+      "type": "object",
+      "required": ["$ref"],
+      "properties": {
+        "$ref": {
+          "type": "string",
+          "description": "A URI reference to the target component. Internal refs begin with '#'; external refs MUST be absolute URIs (RFC 3986)."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
