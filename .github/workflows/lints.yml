@@ -33,7 +33,7 @@ jobs:
           import yaml
           import jsonschema
 
-          schema_path = pathlib.Path("spec/openschema.json")
+          schema_path = pathlib.Path("schema/openschema.json")
           examples_dir = pathlib.Path("examples")
 
           with schema_path.open() as f:
