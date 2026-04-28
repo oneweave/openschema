@@ -6,7 +6,7 @@ This first draft is structurally inspired by the document style used by the Open
 
 ## Conventions
 
-### Version 0.1.0-draft
+### Version 0.1.0
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
 
@@ -27,7 +27,7 @@ The OpenSchema Specification does not assume SQL-only or NoSQL-only behavior. Fe
 For example:
 
 ```yaml
-openschema: 0.1.0-draft
+openschema: 0.1.0
 info:
   title: Customer Data Model
   version: 1.0.0
@@ -215,7 +215,7 @@ This object MAY be extended with [Specification Extensions](#specificationExtens
 ##### OpenSchema Object Example
 
 ```yaml
-openschema: 0.1.0-draft
+openschema: 0.1.0
 id: urn:oneweave:openschema:customer-data
 info:
   title: Customer Data Model

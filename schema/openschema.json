@@ -1,10 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://openschema.io/schemas/0.1.0-draft/openschema.json",
+  "$id": "https://openschema.io/schemas/0.1.0/openschema.json",
   "title": "OpenSchema Document",
-  "description": "Validates an OpenSchema 0.1.0-draft document.",
+  "description": "Validates an OpenSchema 0.1.0 document.",
   "type": "object",
-  "required": ["openschema", "info", "schemas"],
+  "required": [
+    "openschema",
+    "info",
+    "schemas"
+  ],
   "properties": {
     "openschema": {
       "$ref": "#/$defs/OpenSchemaVersionString"
@@ -40,7 +44,10 @@
     "InfoObject": {
       "description": "Metadata about the schema document.",
       "type": "object",
-      "required": ["title", "version"],
+      "required": [
+        "title",
+        "version"
+      ],
       "properties": {
         "title": {
           "type": "string",
@@ -101,7 +108,9 @@
     "LicenseObject": {
       "description": "License information for the schema.",
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -121,8 +130,12 @@
       "patternProperties": {
         "^[A-Za-z0-9_\\-]+$": {
           "oneOf": [
-            { "$ref": "#/$defs/SystemObject" },
-            { "$ref": "#/$defs/ReferenceObject" }
+            {
+              "$ref": "#/$defs/SystemObject"
+            },
+            {
+              "$ref": "#/$defs/ReferenceObject"
+            }
           ]
         }
       },
@@ -160,8 +173,12 @@
       "minProperties": 1,
       "additionalProperties": {
         "oneOf": [
-          { "$ref": "#/$defs/SchemaObject" },
-          { "$ref": "#/$defs/ReferenceObject" }
+          {
+            "$ref": "#/$defs/SchemaObject"
+          },
+          {
+            "$ref": "#/$defs/ReferenceObject"
+          }
         ]
       }
     },
@@ -170,8 +187,12 @@
       "type": "object",
       "additionalProperties": {
         "oneOf": [
-          { "$ref": "#/$defs/ContainerObject" },
-          { "$ref": "#/$defs/ReferenceObject" }
+          {
+            "$ref": "#/$defs/ContainerObject"
+          },
+          {
+            "$ref": "#/$defs/ReferenceObject"
+          }
         ]
       }
     },
@@ -180,15 +201,21 @@
       "type": "object",
       "additionalProperties": {
         "oneOf": [
-          { "$ref": "#/$defs/ContainerObject" },
-          { "$ref": "#/$defs/ReferenceObject" }
+          {
+            "$ref": "#/$defs/ContainerObject"
+          },
+          {
+            "$ref": "#/$defs/ReferenceObject"
+          }
         ]
       }
     },
     "ContainerObject": {
       "description": "A logical container of persisted records (table, collection, bucket, etc.).",
       "type": "object",
-      "required": ["fields"],
+      "required": [
+        "fields"
+      ],
       "properties": {
         "summary": {
           "type": "string",
@@ -239,7 +266,9 @@
     "IndexObject": {
       "description": "A secondary index for a container.",
       "type": "object",
-      "required": ["fields"],
+      "required": [
+        "fields"
+      ],
       "properties": {
         "fields": {
           "type": "array",
@@ -271,7 +300,9 @@
     "IndexFieldObject": {
       "description": "One field position within an index.",
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -280,7 +311,10 @@
         "order": {
           "type": "string",
           "description": "The index ordering. MUST be 'asc' or 'desc' when specified.",
-          "enum": ["asc", "desc"]
+          "enum": [
+            "asc",
+            "desc"
+          ]
         }
       },
       "additionalProperties": false
@@ -290,15 +324,21 @@
       "type": "object",
       "additionalProperties": {
         "oneOf": [
-          { "$ref": "#/$defs/FieldObject" },
-          { "$ref": "#/$defs/ReferenceObject" }
+          {
+            "$ref": "#/$defs/FieldObject"
+          },
+          {
+            "$ref": "#/$defs/ReferenceObject"
+          }
         ]
       }
     },
     "FieldObject": {
       "description": "A single field definition within a record.",
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -334,8 +374,12 @@
         },
         "items": {
           "oneOf": [
-            { "$ref": "#/$defs/FieldObject" },
-            { "$ref": "#/$defs/ReferenceObject" }
+            {
+              "$ref": "#/$defs/FieldObject"
+            },
+            {
+              "$ref": "#/$defs/ReferenceObject"
+            }
           ],
           "description": "The item definition for repeated values. MUST only be present when type is 'array'. Arrays are homogeneous: a single item type applies to all elements."
         },
@@ -359,7 +403,9 @@
     "TagObject": {
       "description": "A tag for logical grouping and discovery.",
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -375,7 +421,9 @@
     "ExternalDocumentationObject": {
       "description": "A reference to external documentation.",
       "type": "object",
-      "required": ["url"],
+      "required": [
+        "url"
+      ],
       "properties": {
         "description": {
           "type": "string",
@@ -398,8 +446,12 @@
           "description": "Reusable schema fragments of the same Schema Object type as root-level schemas values. Intended for reuse via $ref. Distinct from the root-level 'schemas' field, which declares named logical schemas.",
           "additionalProperties": {
             "oneOf": [
-              { "$ref": "#/$defs/SchemaObject" },
-              { "$ref": "#/$defs/ReferenceObject" }
+              {
+                "$ref": "#/$defs/SchemaObject"
+              },
+              {
+                "$ref": "#/$defs/ReferenceObject"
+              }
             ]
           }
         },
@@ -408,8 +460,12 @@
           "description": "Reusable field definitions.",
           "additionalProperties": {
             "oneOf": [
-              { "$ref": "#/$defs/FieldObject" },
-              { "$ref": "#/$defs/ReferenceObject" }
+              {
+                "$ref": "#/$defs/FieldObject"
+              },
+              {
+                "$ref": "#/$defs/ReferenceObject"
+              }
             ]
           }
         },
@@ -418,8 +474,12 @@
           "description": "Reusable container definitions.",
           "additionalProperties": {
             "oneOf": [
-              { "$ref": "#/$defs/ContainerObject" },
-              { "$ref": "#/$defs/ReferenceObject" }
+              {
+                "$ref": "#/$defs/ContainerObject"
+              },
+              {
+                "$ref": "#/$defs/ReferenceObject"
+              }
             ]
           }
         }
@@ -429,7 +489,9 @@
     "ReferenceObject": {
       "description": "References another component within the document or in an external document via a URI.",
       "type": "object",
-      "required": ["$ref"],
+      "required": [
+        "$ref"
+      ],
       "properties": {
         "$ref": {
           "type": "string",

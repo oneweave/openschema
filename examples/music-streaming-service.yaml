@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=../schema/openschema.json
-openschema: 0.1.0-draft
+openschema: 0.1.0
 id: urn:example:openschema:music-streaming
 info:
   title: Music Streaming Service

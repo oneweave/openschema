@@ -8,7 +8,7 @@ The latest draft specification can be found at [spec/openschema.md](./openschema
 
 **The human-readable markdown file is the source of truth for the specification.**
 
-- [Version 0.1.0-draft](./openschema.md) (latest)
+- [Version 0.1.0](./openschema.md) (latest)
 
 Looking for the JSON Schema file? See [spec/openschema.json](./openschema.json).
 
